@@ -1,43 +1,47 @@
 # CAN Bus Transceiver Simulation in LTspice
 
-A discrete-level hardware simulation of a Controller Area Network (CAN) Transceiver physical layer, designed from scratch using LTspice. This project models the exact internal silicon architecture of industry-standard CAN transceivers (such as the TJA1050 or SN65HVD230), mapping digital logic signals to differential bus voltages.
+A discrete-level hardware simulation of a Controller Area Network (CAN) Transceiver physical layer, designed from scratch using LTspice. This project models the physical mechanism of mapping digital logic signals to differential bus voltages and decoding them back via a comparator interface.
 
+---
 
 ## Project Overview
 
-In embedded and automotive systems, a CAN Transceiver acts as the physical bridge between a microcontroller's logic-level UART/CAN peripheral ($TXD$/$RXD$) and the physical twisted-pair network cable ($CANH$/$CANL$). 
+In embedded and automotive systems, a CAN Transceiver acts as the physical bridge between a microcontroller's logic-level UART/CAN peripheral (TX/RX) and the physical network bus lines (CANH/CANL). 
 
-Instead of using a pre-built black-box SPICE model, this project implements the physical layer using Voltage-Controlled Switches (SW), discrete resistor networks for Split Termination, and a Schmitt Trigger / Comparator (LT1017) to achieve high-speed differential sensing.
+This project implements the transceiver architecture using Voltage-Controlled Switches (SW), standard termination resistors, and a digital Schmitt Trigger / Comparator (A1) to demonstrate robust differential signaling.
 
 ---
 
 ## How It Works
 
 ### Transmitter Stage (Tx)
-The digital pulse train ($VTXD$) drives two complementary voltage-controlled switches to modulate the bus lines:
-* **Dominant State (Logic 0):** The switches close. $CANH$ is actively driven to **$3.0\text{ V}$** and $CANL$ is driven to **$2.0\text{ V}$**, creating a distinct **$1.0\text{ V}$ differential voltage gap** ($V_{diff} = \text{CANH} - \text{CANL}$).
-* **Recessive State (Logic 1):** The switches open. The active drivers disconnect. The common-mode biased **$2.5\text{ V}$ reference** pulls both $CANH$ and $CANL$ back to equilibrium via $60\ \Omega$ split-termination resistors. $V_{diff}$ drops to **$0\text{ V}$**.
+The digital pulse train ($V(vtx)$) actively drives two complementary voltage-controlled switches to modulate the CAN bus:
+* **Dominant State (Logic 0):** When $V(vtx)$ drops to 0V, the switches close. $CANH$ is actively driven toward **3.0V** through $V_1$ ($3.5\text{V}$), and $CANL$ is driven toward **2.0V** through $V_3$ ($1.5\text{V}$), creating a **1.0V differential gap** ($V_{diff} = \text{CANH} - \text{CANL}$).
+* **Recessive State (Logic 1):** When $V(vtx)$ rises to 5V, the switches open. The active voltage drivers disconnect, leaving the bus lines to stabilize at their baseline levels through the resistor network.
 
 ### Receiver Stage (Rx)
 The receiver stage continuously monitors the physical bus line and decodes the differential voltage back into micro-readable UART logic:
-* Utilizes a high-speed comparator (**LT1017**) or a **Schmitt Trigger** macro model to compare $CANH$ and $CANL$.
-* It decodes the inverted output (active-low CAN logic): When a voltage gap ($V_{diff} \ge 0.9\text{ V}$) is detected, the $VRXD$ output immediately snaps to **$0\text{ V}$ (Logic 0)**, mirroring the transmitted data flawlessly.
+* Utilizes a digital Schmitt Trigger component (**A1**) to compare $CANH$ and $CANL$.
+* It decodes the inverted output (active-low CAN logic) using the inverting output node: When a differential voltage gap is detected, the $V(vrx)$ output perfectly switches to track the input data frame.
 
 ---
 
 ## Circuit Schematic
 
-The simulation project consists of three main hardware blocks structured on the LTspice grid:
-1. **The Signal Generator ($VTXD$):** Simulates a $100\text{ kHz}$ microcontroller data frame.
-2. **The Split Bus Network:** Incorporates a total of $120\ \Omega$ standard bus termination matched with a $2.5\text{ V}$ common-mode stabilization core to minimize high-frequency EMI.
-3. **The Receiver Interface:** An open-collector comparator layout with a $10\text{ k}\Omega$ pull-up resistor to prevent output floating.
+The simulation setup consists of three primary functional hardware blocks:
+1. **The Signal Generator ($V_2$):** Simulates a 100 kHz microcontroller data frame ($V(vtx)$) switching between 0V and 5V.
+2. **The Bus Termination Network:** Incorporates $60\ \Omega$ isolation resistors ($R_1, R_2$) combined with a central $120\ \Omega$ load resistor ($R_3$) to model standard bus impedance characteristics.
+3. **The Receiver Interface ($A_1$):** A Schmitt-trigger differential comparator receiving $CANH$ at the non-inverting pin and $CANL$ at the inverting pin to recreate the logical $V(vrx)$ feedback loop.
 
 ---
 
 ## Simulation Waveforms
 
-Running the transient analysis (`.tran 50u`) yields a highly accurate mirroring effect showing absolute synchronization between input and output data loops:
+Running the transient analysis (`.tran 50u`) yields accurate, highly synchronized signal transitions across the nodes:
 
-* **$V(vtxd)$ & $V(rxd)$:** Perfectly aligned $0\text{ V}$ to $5\text{ V}$ square waves showcasing zero phase lag.
-* **$V(canh)$ & $V(canl)$:** The classic differential "mirror effect" oscillating between the quiet $2.5\text{ V}$ baseline up to $3.0\text{ V}$ and down to $2.0\text{ V}$ during dominant transmissions.
+* **Input & Output Logic:** The source pulse $V(vtx)$ and the received data loop $V(vrx)$ match flawlessly, validating the transceiver logic transmission.
+* **Differential Bus Lines:** $V(canh)$ (Blue) and $V(canl)$ (Red) showcase the classic differential "mirror effect", splitting symmetrically during dominant states and converging toward equilibrium during recessive cycles.
 
+1. Clone this repository:
+   ```bash
+   git clone [https://github.com/](https://github.com/)[Your-Username]/can-transceiver-ltspice.git
