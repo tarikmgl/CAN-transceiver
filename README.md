@@ -15,7 +15,7 @@ This project implements the transceiver architecture using Voltage-Controlled Sw
 ## How It Works
 
 ### Transmitter Stage (Tx)
-The digital pulse train ($V(vtx)$) actively drives two complementary voltage-controlled switches to modulate the CAN bus:
+The digital pulse train $V(vtx)$ actively drives two complementary voltage-controlled switches to modulate the CAN bus:
 * **Dominant State (Logic 0):** When $V(vtx)$ drops to 0V, the switches close. $CANH$ is actively driven toward **3.0V** through $V_1$ ($3.5\text{V}$), and $CANL$ is driven toward **2.0V** through $V_3$ ($1.5\text{V}$), creating a **1.0V differential gap** ($V_{diff} = \text{CANH} - \text{CANL}$).
 * **Recessive State (Logic 1):** When $V(vtx)$ rises to 5V, the switches open. The active voltage drivers disconnect, leaving the bus lines to stabilize at their baseline levels through the resistor network.
 
